@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "ai.newzai.api/NewzAI",
+  "name": "ai.newzai.api/news-mcp",
   "title": "NewzAI MCP Server",
   "description": "News MCP: real-time headlines & custom news search across 7 regions. Free, just sign in with Google.",
   "repository": {
     "url": "https://github.com/Gauraviitkgp/news-mcp",
     "source": "github"
   },
-  "version": "1.0.2",
+  "version": "1.0.0",
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://api.newzai.ai/mcp/"
+      "url": "https://api.newzai.ai/mcp"
     }
   ]
 }
