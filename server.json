@@ -1,0 +1,13 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "ai.newzai.api/NewzAI",
+  "title": "NewzAI MCP Server",
+  "description": "NewzAI news MCP: global, customizable, time-scoped semantic+keyword search across articles.",
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.newzai.ai/mcp/"
+    }
+  ]
+}
