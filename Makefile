@@ -5,7 +5,7 @@ help:
 
 authenticate:
 	@PRIVATE_KEY="$$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')"; \
-	@mcp-publisher login dns --domain "${MY_DOMAIN}" --private-key "$${PRIVATE_KEY}"
+	mcp-publisher login dns --domain "${MY_DOMAIN}" --private-key "$${PRIVATE_KEY}"
 
 install:
 	curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
