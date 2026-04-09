@@ -1,27 +1,68 @@
-# News MCP Server — Real-Time News for AI Agents | NewsAI
+# News MCP Server for AI Agents | NewsAI
 
-> The fastest way to add live news to any AI agent via the Model Context Protocol (MCP).
+> A news intelligence layer for MCP clients - not just a thin wrapper around search or RSS.
 
-**NewsAI** is a **news MCP server** that gives Claude, Cursor, VS Code Copilot, and any MCP-compatible AI agent instant access to real-time headlines and in-depth news — across 7 global regions, in any language, on any topic.
+**NewsAI** is a **news MCP server** that gives Claude, Cursor, VS Code Copilot, Windsurf, and any MCP-compatible AI agent instant access to real-time headlines and detailed news retrieval across **7 global regions**, **multiple languages**, and **any topic**.
 
-If you are looking for a **news MCP**, this is the one. No scraping, no RSS parsing, no brittle APIs — just a single MCP endpoint that works out of the box.
+If you are looking for a serious **news MCP**, this is built for production agent workflows: no scraping, no RSS parsing, no brittle site adapters - just a single MCP endpoint with structured tools that work out of the box.
 
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
 [![Provider](https://img.shields.io/badge/Provider-NewzAI-green)](https://newzai.ai)
 
-**Want to see it in action?** Try the news MCP live with an AI agent at [app.newzai.ai](https://app.newzai.ai) — no setup required, just chat.
+**Want to see it in action?** Try it live at [app.newzai.ai](https://app.newzai.ai).
 
 ---
 
-## What Is a News MCP Server?
+## What This MCP Actually Does
 
-A **news MCP server** is a [Model Context Protocol](https://modelcontextprotocol.io) server that exposes real-time news data as tools your AI agent can call. Instead of training on stale data, your agent fetches live headlines and articles on demand — during inference, in real time.
+Most "news MCP" offerings are thin wrappers around generic search or a single feed. NewsAI is positioned differently: **MCP is the interface, but the product value is the news retrieval layer behind it**.
 
-NewsAI's MCP server for news covers:
-- **7 regions:** India, United States, United Kingdom, Japan, Australia, Canada, Germany
-- **Any language:** English, Japanese, German, and more via language codes
-- **Any topic:** Predefined categories (Technology, Business, Sports, Entertainment, World) or fully custom keyword search
-- **Recency control:** Filter news from the last N hours
+Instead of forcing agents to browse raw pages or depend on vague web search results, NewsAI lets them ask for:
+
+- **Top headlines** for a specific region
+- **Topic coverage** from a predefined category like `TECHNOLOGY` or `BUSINESS`
+- **Custom-topic retrieval** for any keyword or theme
+- **Recency-constrained news** using `last_n_hours`
+- **Multilingual retrieval** using standard language codes
+
+That makes it useful as an **agent-facing news intelligence layer** for assistants, research systems, market monitoring, and live RAG pipelines.
+
+---
+
+## Why NewsAI Is Different
+
+| Capability | Thin news wrapper | NewsAI |
+| --- | --- | --- |
+| MCP-native tool interface | Partial | Yes |
+| Region-specific news retrieval | Usually limited | Yes |
+| Language parameterization | Rare | Yes |
+| Recency filtering | Usually no | Yes |
+| Predefined category retrieval | Usually no | Yes |
+| Arbitrary topic search | Partial | Yes |
+| Structured agent-ready outputs | Inconsistent | Yes |
+| OAuth onboarding for interactive clients | Rare | Yes |
+
+---
+
+## Architecture
+
+```text
+AI Agent / MCP Client
+        |
+        v
+NewsAI MCP Server (Streamable HTTP)
+        |
+        +-- Google OAuth session
+        +-- Tool selection + parameter validation
+        +-- Region / language / topic / recency controls
+        v
+NewsAI retrieval layer
+        |
+        v
+Structured news results for the agent
+```
+
+The important point is that **MCP is the delivery mechanism, not the entire product**. The server exposes a compact, agent-usable tool surface on top of a live news retrieval system that already understands regional scope, topic intent, and freshness constraints.
 
 ---
 
@@ -40,34 +81,46 @@ Add the NewsAI news MCP server to your MCP client configuration:
 }
 ```
 
-> **Authentication required** — Uses Google OAuth. You will be prompted to sign in on first use. No API key management needed.
+> **Authentication required** - Uses Google OAuth. You will be prompted to sign in on first use. No API key management needed for interactive clients.
 
-Works with: **Claude Desktop**, **Cursor**, **VS Code Copilot**, **Windsurf**, and any MCP-compatible client.
+Works with **Claude Desktop**, **Cursor**, **VS Code Copilot**, **Windsurf**, and any MCP-compatible client.
+
+---
+
+## Supported Coverage
+
+NewsAI's MCP server currently supports:
+
+- **7 regions:** India, United States, United Kingdom, Japan, Australia, Canada, Germany
+- **Multilingual retrieval:** English, Japanese, German, Hindi, and more via language codes
+- **Two retrieval modes:** predefined categories and fully custom topic search
+- **Freshness controls:** latest headlines or time-bounded search using `last_n_hours`
+
+Supported region slugs:
+`india`, `united-states`, `united-kingdom`, `japan`, `australia`, `canada`, `germany`
 
 ---
 
 ## MCP Tools
 
-This news MCP server exposes three tools to your AI agent:
-
----
+This news MCP server exposes three tools to your AI agent.
 
 ### `fetch_news_headlines`
 
-Fetch the latest top news headlines for a region in seconds.
+Fetch the latest top news headlines for a region.
 
-| Parameter  | Type   | Required | Description                        |
-| ---------- | ------ | -------- | ---------------------------------- |
-| `region`   | string | Yes      | One of the supported regions below |
-| `language` | string | No       | Output language (default: `en`)    |
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `region` | string | Yes | One of the supported regions |
+| `language` | string | No | Output language code, default `en` |
 
-**Supported regions:** `india`, `united-states`, `united-kingdom`, `japan`, `australia`, `canada`, `germany`
+**Best for:** fast situational awareness, briefing agents, "what happened today?" workflows.
 
 **Example prompt:**
-> *Get me the latest headlines from India*
+> Get me the latest headlines from India.
 
 **Example response:**
-```
+```text
 - 25th Amendment row: Can Trump be removed from office amid Iran war?
 - Iran's 'lost the key' post offers comic relief amid global tension
 - NASA's Artemis II Crew To Break Distance Record
@@ -75,74 +128,111 @@ Fetch the latest top news headlines for a region in seconds.
 ...
 ```
 
----
-
 ### `search_news_predefined_category`
 
 Fetch rich, detailed news articles for a well-known topic category.
 
-| Parameter             | Type   | Required | Description                               |
-| --------------------- | ------ | -------- | ----------------------------------------- |
-| `predefined_category` | enum   | Yes      | One of the predefined categories below    |
-| `region`              | string | No       | Region to fetch from (default: `india`)   |
-| `language`            | string | No       | Output language (default: `en`)           |
-| `top_k`               | int    | No       | Number of articles to return (default: `20`) |
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `predefined_category` | enum | Yes | One of the predefined categories below |
+| `region` | string | No | Region to fetch from, default `india` |
+| `language` | string | No | Output language code, default `en` |
+| `top_k` | int | No | Number of articles to return, default `20` |
 
 **Available categories:** `TECHNOLOGY`, `BUSINESS`, `ENTERTAINMENT`, `SPORTS`, `WORLD`
 
-**Example prompt:**
-> *What's happening in technology news in the US?*
+**Best for:** stable agent workflows where category-level intent is known ahead of time.
 
----
+**Example prompt:**
+> What's happening in technology news in the US?
 
 ### `search_news_for_any_category`
 
-Fetch news for any custom keyword or topic — the most flexible tool in the news MCP.
+Fetch news for any custom keyword or topic.
 
-| Parameter      | Type   | Required | Description                                               |
-| -------------- | ------ | -------- | --------------------------------------------------------- |
-| `category`     | string | Yes      | Any topic or keyword (e.g., `"climate change"`, `"AI"`)   |
-| `region`       | string | No       | Region to fetch from (default: `india`)                   |
-| `language`     | string | No       | Output language code (default: `en`)                      |
-| `top_k`        | int    | No       | Number of articles to return (default: `20`)              |
-| `last_n_hours` | int    | No       | Limit to news from the last N hours (e.g., `24`)          |
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `category` | string | Yes | Any topic or keyword such as `"climate change"` or `"AI regulation"` |
+| `region` | string | No | Region to fetch from, default `india` |
+| `language` | string | No | Output language code, default `en` |
+| `top_k` | int | No | Number of articles to return, default `20` |
+| `last_n_hours` | int | No | Limit to recent news, for example `24` |
+
+**Best for:** market intelligence, competitor tracking, live research, and long-tail topic discovery.
 
 **Example prompts:**
-> *Find me news about electric vehicles in Japan from the last 24 hours*
-> *What are people saying about AI regulation this week?*
-> *Search for startup funding news in the US*
+> Find me news about electric vehicles in Japan from the last 24 hours.
+
+> What are people saying about AI regulation this week?
+
+> Search for startup funding news in the US.
+
+---
+
+## Technical Notes
+
+- **Protocol:** [Model Context Protocol](https://modelcontextprotocol.io) over remote HTTP transport
+- **Remote endpoint:** `https://api.newzai.ai/mcp/`
+- **Manifest transport type:** `streamable-http`
+- **Authentication:** Google OAuth 2.0
+- **Client model:** interactive sign-in for MCP tools, no manual key rotation for end users
+- **Query controls:** region, language, predefined category, `top_k`, and `last_n_hours`
+- **Language handling:** standard language code input, useful for multilingual agent workflows
+- **Tool design:** small, explicit tool surface rather than an overloaded generic search tool
+
+This design is deliberate. For agents, predictable parameters are usually more valuable than a broad but underspecified endpoint. NewsAI keeps the tool contract tight enough for reliable tool selection while still covering the main retrieval patterns users actually need.
+
+---
+
+## Design Principles
+
+- **Retrieval over generation:** the server provides live news retrieval; the LLM handles reasoning and synthesis on top
+- **Agent-first interface:** tools are parameterized for model use, not for human dashboard browsing
+- **Freshness at query time:** current news is fetched during inference instead of relying on stale model memory
+- **Structured over brittle:** agents get tool outputs instead of scraping arbitrary web pages
+- **Focused tool surface:** headlines, category search, and custom search cover most real news workflows cleanly
 
 ---
 
 ## Why Use a News MCP Instead of Web Search?
 
-| Feature | News MCP (NewsAI) | Generic web search |
-|---|---|---|
-| Structured, clean output | Yes | No — raw HTML |
-| Region-specific sources | Yes | Partial |
+| Feature | NewsAI news MCP | Generic web search |
+| --- | --- | --- |
+| Structured, clean output | Yes | No |
+| Region-specific retrieval | Yes | Partial |
 | Language control | Yes | Limited |
-| Recency filtering (last N hours) | Yes | No |
-| Works natively in Claude & Cursor | Yes | Requires extra tool |
-| No API key management | Yes (OAuth) | Usually no |
+| Recency filtering | Yes | Usually no |
+| Works natively in MCP clients | Yes | No |
+| Promptable by tool-aware agents | Yes | Partial |
+| No page scraping in the client | Yes | No |
 
 ---
 
 ## Use Cases
 
-This news MCP server is used for:
+This news MCP server is well-suited for:
 
-- **AI news briefing agents** — morning digest bots that summarize today's headlines
-- **Research assistants** — fetch domain-specific news (biotech, finance, geopolitics) on demand
-- **Content generation** — ground articles and social posts in real, current events
-- **Market intelligence** — track competitor mentions, industry shifts, breaking business news
-- **Multilingual news** — fetch news in English and deliver summaries in Japanese, German, etc.
-- **RAG pipelines** — inject live news context into retrieval-augmented generation workflows
+- **AI news briefing agents** that generate live daily or hourly digests
+- **Research assistants** that need current topic coverage on demand
+- **Market intelligence workflows** that track companies, sectors, policy, or competitor mentions
+- **Content systems** that ground writing in current events instead of stale model memory
+- **Multilingual assistants** that fetch news in one language and reason or summarize in another
+- **RAG pipelines** that need live news as external context during inference
+- **Monitoring agents** that repeatedly query specific sectors, geographies, or emerging topics
 
 ---
 
 ## Authentication
 
-This MCP server uses **Google OAuth 2.0**. On first connection your MCP client redirects you to a Google sign-in page. After authorizing, your session is maintained automatically — no tokens to copy, no API keys to rotate.
+This MCP server uses **Google OAuth 2.0**. On first connection your MCP client redirects you to a Google sign-in page. After authorization, the client maintains the session automatically.
+
+For most users, this means:
+
+- no API key copy-paste
+- no local secret management
+- lower setup friction for trying the server inside an MCP client
+
+If you need API-key-based access for autonomous pipelines, contact [feedback@newzai.ai](mailto:feedback@newzai.ai).
 
 ---
 
@@ -191,25 +281,30 @@ This MCP server uses **Google OAuth 2.0**. On first connection your MCP client r
 
 ## Frequently Asked Questions
 
-**What is the best news MCP server?**
-NewsAI is purpose-built as a news MCP server — not a generic web search wrapper. It delivers structured, regional, multilingual news data directly to your AI agent via the Model Context Protocol.
+**What makes this different from a generic "news MCP"?**
+Most alternatives behave like thin connectors. NewsAI is designed as a news intelligence layer for AI agents, with structured tools for headlines, category retrieval, custom-topic search, language selection, and recency filtering.
 
 **Does this work with Claude?**
-Yes. Add the MCP config to Claude Desktop and Claude will automatically use the news tools when you ask about current events.
+Yes. Add the MCP config to Claude Desktop and Claude can call the news tools whenever a prompt requires current events.
 
 **Is there a free tier?**
-Yes — it's completely free. All you need is a Google account to sign in via OAuth. If you're building an autonomous agent or pipeline that needs API key access instead of OAuth, contact [feedback@newzai.ai](mailto:feedback@newzai.ai).
+Yes. It is free to use with Google sign-in. If you are building an autonomous agent or pipeline that needs API-key access instead of OAuth, contact [feedback@newzai.ai](mailto:feedback@newzai.ai).
 
 **What regions are supported?**
-India, United States, United Kingdom, Japan, Australia, Canada, and Germany — with more regions coming soon.
+India, United States, United Kingdom, Japan, Australia, Canada, and Germany.
 
 **Can I fetch news in languages other than English?**
-Yes. Pass any BCP-47 language code (e.g., `ja`, `de`, `hi`) as the `language` parameter.
+Yes. Pass a language code such as `ja`, `de`, or `hi` in the `language` parameter.
+
+**Is this just web search inside MCP?**
+No. The value is not just "news over MCP." The value is a tighter retrieval layer for live news, exposed through MCP in a form agents can use reliably.
 
 ---
 
 ## Links
 
 - Website: [newzai.ai](https://newzai.ai)
+- Live app: [app.newzai.ai](https://app.newzai.ai)
 - API: [api.newzai.ai](https://api.newzai.ai)
-- Model Context Protocol spec: [modelcontextprotocol.io](https://modelcontextprotocol.io)
+- MCP server endpoint: [https://api.newzai.ai/mcp/](https://api.newzai.ai/mcp/)
+- Model Context Protocol: [modelcontextprotocol.io](https://modelcontextprotocol.io)
